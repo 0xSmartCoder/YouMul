@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="justify-center items-center bg-black flex min-h-screen ">
+    <form id="login_Form" class=" bg-white p-8  shadow-l space-y-4 rounded-lg">
+        <h1 class="text-blue-600 text-2xl text-center font-bold">Login</h1>
+        <input type="text", id="email", placeholder="Enter your email", required
+        class="w-full px-4 py-2  border border-gray-300 focus: outline-node focus:ring-2 focus: ring-blue-500"
+        >
+        <input type="text", id="password", placeholder="Enter your password", required
+        class="w-full py-2 px-4 focus: outline-node focus:ring-2 focus: ring-blue-500"
+        >
+        <button type="submit" class=" w-full py-2 bg-blue-600  text-white rounded hover:bg-blue-700 transition-colors"> Login</button>
+        <p class="text-center text-gray-600">Don't ahve an account? <button><a href="register.html">Register</a></button></p>
+    </form>
+    <script>
+        document.getElementById("login_Form").addEventListener("submit", async(e)=>{
+            e.preventDefault()
+           const email = document.getElementById("email").value
+           const password =  document.getElementById("password").value
+           try{
+           const res = await fetch("http://localhost:5000/api/auth/login", {
+            method: "POST",
+            headers: ({"Content-Type": "application/json"}),
+            body: JSON.stringify({email, password})
+           })
+           const data  = await res.json()
+           if(res.ok && data.token){
+            localStorage.setItem("token", data.token)
+            alert("Login Successfull")
+            window.location.href = "profile.html"
+           }else{
+            alert("Login Failed")
+           }
+           }catch(Error){
+            console.log("Error", Error)
+            alert ("Something Went Wrong")
+           }
+        })
+    </script>
+</body>
+</html>

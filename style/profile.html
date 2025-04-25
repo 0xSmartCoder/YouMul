@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #previewPic {
+          width: 150px;
+          height: 150px;
+          object-fit: cover;
+          border-radius: 50%;
+          border: 2px solid white;
+          margin-bottom: 10px;
+        }
+      </style>
+</head>
+<body class="bg-blue-600 min-h-screen flex items-center justify-center px-4 py-2">
+    <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md space-y-5 text-center">
+    <img id="previewPic" src="" alt="Profile Picture" class="w-32 h-32 rounded-full mx-auto object-cover border-4 border-white shadow-md">
+    <form id="uploadForm" enctype="multipart/form-data" class="flex flex-col items-center gap-2">
+        <input type="file" id="profileInput" name="profilepic" accept="image/*" required class="hidden">
+        <label for="profileInput" class="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded shadow">
+            📷 Choose Image
+          </label>
+        <button type="submit" id="uploadbt" class="bg-purple-600 hover:bg-purple-800 text-white font-semibold py-2 px-4 rounded hidden">Add Image</button>
+        <button id="updatebt" type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded hidden">Update Image</button>
+    </form>
+    <div class="space-y-1">
+    <p class="text-lg font-semibold"><strong>Username: </strong><span id="userName" class="font-normal text-gray-700"></span>
+        <input type="text" id="updateUserNameInput" class="hidden border rounded px-2 py-1 text-sm">
+    <button id="editUsernamebtn" class="text-blue-500 text-sm ml-2">✏️</button>
+    </p>
+    <p class="text-lg font-semibold"><strong>Email:  </strong><span id="email" class="font-normal text-gray-700"></span></p>
+    <p class="text-lg font-semibold"><strong>Bio: </strong><span id="bio" class="font-normal text-gray-700"></span>
+        <input type="text" id="updateBioInput" class="hidden border rounded px-2 py-1 text-sm">
+        <button id="editBioBtn" class="text-blue-500 text-sm ml-2">✏️</button>
+    </p> 
+    <button id="savebt" class=" mt-2 hidden bg-red-600 text-white px-4 py-2 rounded">Save Changes</button>
+
+    <p class="text-lg font-semibold"><strong>Followers:</strong><span id="followersCount" class="font-normal text-gray-700"></span></p>
+    <p class="text-lg font-semibold"><strong>Following:</strong><span id="followingCount" class="font-normal text-gray-700"></span></p>
+</div>
+    <button id="followbt" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 transition duration-300">Follow</button>
+
+    <div>
+        <button id="postbt" class="mt-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-6 rounded transition duration-300">
+          <a href="post.html">New Post</a>
+        </button>
+      </div>    
+
+    <div>
+      <h2 class="text-xl font-bold mt-6 mb-2">Posts</h2>
+      <ul id="postList" class="space-y-3 text-left"></ul>
+    </div>
+</div>
+    <script>
+        async function loadProfile(){try{
+            const token = localStorage.getItem("token")
+            const params = new URLSearchParams(window.location.search)
+            const userId = params.get("userId")
+            if(!userId){
+                document.getElementById("uploadForm").style.display = "block"
+                document.getElementById("postbt").style.display = "inline-block"
+            }else{
+                document.getElementById("uploadForm").style.display = "none"
+                document.getElementById("postbt").style.display = "none"
+            }
+            const url = userId?
+                `http://localhost:5000/api/profile/user/${userId}`:
+                 "http://localhost:5000/api/profile/me"
+
+        const res = await fetch(url, {
+            headers :{Authorization: `Bearer ${token}`}
+        })
+        const data = await res.json()
+        document.getElementById("userName").innerText = data.userName || "N/A"
+        document.getElementById("email").innerText = data.email
+        document.getElementById("bio").innerText = data.bio || "N/A"
+        document.getElementById("followersCount").innerText = data.followers.length
+        document.getElementById("followingCount").innerHTML = data.following.length
+        const img = document.getElementById("previewPic")
+        img.src = data.profilePic?`http://localhost:5000/${data.profilePic}`: ""
+        if(data.profilePic){
+                  document.getElementById("uploadbt").classList.add("hidden")
+                  document.getElementById("updatebt").classList.remove("hidden")
+                 }else{
+                    document.getElementById("uploadbt").classList.remove("hidden")
+                    document.getElementById("updatebt").classList.add("hidden")
+                 }
+
+            }catch (Error){
+            console.log("Error",error)
+        }} 
+        let currentUserName = ""
+        let currentBio = ""
+        document.getElementById("editUsernamebtn").addEventListener("click", ()=>{
+            const userSpan = document.getElementById("userName")
+            const userInput = document.getElementById("updateUserNameInput")
+            userInput.value = userSpan.innerText
+            userSpan.classList.add("hidden")
+            userInput.classList.remove("hidden")
+            document.getElementById("savebt").classList.remove("hidden")
+        })
+        document.getElementById("editBioBtn").addEventListener("click", ()=>{
+            const bioSpan = document.getElementById("bio")
+            const bioInput = document.getElementById("updateBioInput")
+            bioInput.value = bioSpan.innerText
+            bioSpan.classList.add("hidden")
+            bioInput.classList.remove("hidden")
+            document.getElementById("savebt").classList.remove("hidden")
+        })
+        document.getElementById("savebt").addEventListener("click", async()=>{
+            const userInput = document.getElementById("updateUserNameInput").value;
+            const bioInput = document.getElementById("updateBioInput").value;
+
+            const token = localStorage.getItem("token");
+            try{
+            const res = await fetch("http://localhost:5000/api/profile/update", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({userName: userInput, bio: bioInput})
+            })
+
+            const data = await res.json()
+            if(res.ok){
+                document.getElementById("userName").innerText = userInput
+                document.getElementById("bio").innerText = bioInput
+
+                document.getElementById("userName").classList.remove("hidden")
+                document.getElementById("bio").classList.remove("hidden")
+
+                document.getElementById("updateUserNameInput").classList.add("hidden")
+                document.getElementById("updateBioInput").classList.add("hidden")
+
+                document.getElementById("savebt").classList.add("hidden")
+                alert("Profile updated!");
+        } else {
+            alert("Failed to update: " + data.message);
+        }
+            }catch(error){
+                console.log("Error:", error)
+            }
+        })
+        document.getElementById("uploadForm").addEventListener("submit",async(e)=>{
+            e.preventDefault()
+            const fileInput = document.getElementById("profileInput")
+            const formData = new FormData()
+            formData.append("profilepic", fileInput.files[0])
+            const token = localStorage.getItem("token")
+            try{
+                const res = await fetch("http://localhost:5000/api/upload/profile-pic",{
+                    method: "POST",
+                    headers: {Authorization: `Bearer ${token}`},
+                    body: formData
+                })
+                
+                const data = await res.json()
+                
+                if (res.ok) {
+                    alert("Profile picture updated successfully");
+                    const img = document.getElementById("previewPic")
+                    img.src = `http://localhost:5000/${data.profilePic}?t=${new Date().getTime()}`;
+                }else {
+          alert("Upload failed: " + data.message);
+        }
+            }catch (err) {
+        console.error("Upload Error:", err);
+        alert("Something went wrong!");
+      }
+        })
+        loadProfile().then(()=>{
+                const userId = new URLSearchParams(window.location.search).get("userId")
+                if(userId){
+                    followStatus()
+                }
+            })
+         
+        let isFollowing =  false
+        async function checkCurrentUser(){
+            const token = localStorage.getItem("token")
+            try{
+            const res = await fetch("http://localhost:5000/api/profile/me",{
+                method: "GET",
+                headers: {Authorization: `Bearer ${token}`}
+            })
+            const user = await res.json()
+            return user
+            }catch(error){
+                console.log("Error:",error)
+                alert("Something went wrong!")
+            }
+        }
+
+        async function followStatus(){
+            const token = localStorage.getItem("token")
+            const userId = new URLSearchParams(window.location.search).get("userId")
+            if(!userId) return;
+            try{
+                const res  = await fetch(`http://localhost:5000/api/profile/user/${userId}`,{
+                    method: "GET",
+                    headers: {Authorization: `Bearer ${token}`} 
+                })
+                const userData = await res.json()
+                const currentUser = await checkCurrentUser()
+                if(!userId || userId === currentUser._id){
+                    document.getElementById("followbt").style.display = "none";
+                    return
+                }
+                if(currentUser.following.includes(userId)){
+                    isFollowing = true
+                    document.getElementById("followbt").innerText = "Unfollow"
+                }else{
+                    isFollowing  = false
+                    document.getElementById("followbt").innerText = "Follow"
+                }
+                document.getElementById("followbt").onclick = toggleFollow
+                
+            }catch(error){
+                console.log("Error:", error)
+            }
+        }
+        loadProfile()
+        async function toggleFollow(){
+            const token = localStorage.getItem("token")
+            const userId = new URLSearchParams(window.location.search).get("userId")
+            const url = isFollowing?
+            `http://localhost:5000/api/profile/unfollow/${userId}`
+            :`http://localhost:5000/api/profile/follow/${userId}`;
+            try{
+                const res  = await fetch(url,{
+                    method: "POST",
+                    headers: {Authorization: `Bearer ${token}`} 
+                })
+                const data = await res.json()
+
+                if(res.ok){
+                    isFollowing = !isFollowing
+                    document.getElementById("followbt").innerText = isFollowing ?
+                    "Unfollow"
+                    :"Follow";
+                    alert(data.message)
+                }
+            }catch(error){
+                console.log("Error:", error)
+                alert("Something went wrong!");
+            }
+            loadProfile().then(()=>{
+                const userId = new URLSearchParams(window.location.search).get("userId")
+                if(userId){
+                    followStatus()
+                }
+            })
+        }
+          // fetch myPosts & users Posts
+
+          async function fetchMyPosts(){
+            const token = localStorage.getItem("token")
+            const params = new URLSearchParams(window.location.search)
+            const userId  = params.get("userId")
+            try{
+                const url = userId?
+                `http://localhost:5000/api/post/user/${userId}`:
+                 "http://localhost:5000/api/post/mypost"
+            const res = await fetch(url,{
+                method: "GET",
+                headers: {Authorization: `Bearer ${token}`}
+            })
+            const post = await res.json()
+            const list = document.getElementById("postList")
+            list.innerHTML = ""
+            post.forEach(posts =>{
+                const li = document.createElement("li")
+                li.innerHTML = `
+                <p><strong>${posts.userId?.userName || "Anonyomus"}</strong></p>
+                <p>${posts.text}</p>
+                <img src="http://localhost:5000/uploads/${posts.image}" width="200"/>
+                <p>likes: ${posts.likes?.length || 0}</p>
+                <button onclick="likePost('${posts._id}')">👍</button>   
+                 <form>
+        <input name="text" placeholder="What's on your mind" required/>
+        <button type="button" onclick="commentPost(event, '${posts._id}')">🗨️</button>
+    </form>
+    <ul>${(posts.comments || []).map(c => `<li><b>${c.userId?.userName || "User"}: </b>${c.text}</li>`).join("")}</ul>`
+                list.appendChild(li)
+            })
+            }catch (Error){
+            console.log("Error".error)
+        }} 
+
+        async function likePost(id){
+            const token =  localStorage.getItem("token")
+            try{
+            const res = await fetch(`http://localhost:5000/api/post/like/${id}`,{
+                method: "PUT",
+                headers: {Authorization: `Bearer ${token}`}
+            })
+            const data = await res.json()
+            if(res.ok){
+                alert ("Post Liked 👍")
+                fetchMyPosts()
+            }else{
+                alert ("Like Failed"+ data.message)
+            }
+        }catch (Error){
+            console.log("Error".error)
+            alert ("Something Went Wrong")
+        }        
+        }
+
+        async function commentPost(e,id){
+            e.preventDefault()
+            const token = localStorage.getItem("token")
+            const form = e.target.closest('form')
+            if (!form) {
+        console.log("No form found");
+        return;  
+    }
+            const text = form.querySelector("input[name='text']").value
+            try{
+             const res = await fetch(`http://localhost:5000/api/post/comment/${id}`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({text})
+             })
+             const data = await res.json()
+             if(res.ok){
+                alert ("🗨️Comment added")
+                fetchMyPosts()
+             }else{
+                alert ("Comment Failed"+ data.message)
+             }
+            }catch (Error){
+            console.log("Error".error)
+            alert ("Something Went Wrong")
+        }   
+        }
+         fetchMyPosts()
+    </script>
+</body>
+</html>

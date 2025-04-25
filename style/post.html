@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>create Post</title>
+</head>
+<body>
+    <form id="post_Form" enctype="multipart/form-data">
+        <input placeholder="What's on your mind" name="text" required/>
+        <input type="file" name="image" accept="image/*" />
+        <button type="submit">Post</button>
+    </form>
+    <p> <a href="profile.html">❮❮</a></p>
+    <script>
+        document.getElementById("post_Form").addEventListener("submit", async (e)=>{
+            e.preventDefault()
+            const formData = new FormData()
+            const text = document.querySelector('input[name="text"]').value
+            const image = document.querySelector('input[name="image"]').files[0]
+            const token = localStorage.getItem("token")
+            formData.append("text", text)
+            formData.append("image", image)
+    
+            try{
+                const res = await fetch("http://localhost:5000/api/post/post",{
+                    method: "POST",
+                    headers: {Authorization: `Bearer ${token}`},
+                    body: formData
+                })
+
+                const data = await res.json()
+                if (res.ok) {
+                    alert("Post Created Successfully");
+                } else {
+                    alert("Failed to create post"+ data.message);
+                }
+            }catch (error) {
+                console.error("Error:", error);
+                alert("Something went wrong")
+        }})
+    </script>
+</body>
+</html>
