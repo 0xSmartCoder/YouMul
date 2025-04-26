@@ -1,43 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>create Post</title>
+  <meta charset="UTF-8">
+  <title>Create Post - YouMul</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <form id="post_Form" enctype="multipart/form-data">
-        <input placeholder="What's on your mind" name="text" required/>
-        <input type="file" name="image" accept="image/*" />
-        <button type="submit">Post</button>
-    </form>
-    <p> <a href="profile.html">❮❮</a></p>
-    <script>
-        document.getElementById("post_Form").addEventListener("submit", async (e)=>{
-            e.preventDefault()
-            const formData = new FormData()
-            const text = document.querySelector('input[name="text"]').value
-            const image = document.querySelector('input[name="image"]').files[0]
-            const token = localStorage.getItem("token")
-            formData.append("text", text)
-            formData.append("image", image)
-    
-            try{
-                const res = await fetch("http://localhost:5000/api/post/post",{
-                    method: "POST",
-                    headers: {Authorization: `Bearer ${token}`},
-                    body: formData
-                })
+<body class="bg-black min-h-screen flex flex-col">
 
-                const data = await res.json()
-                if (res.ok) {
-                    alert("Post Created Successfully");
-                } else {
-                    alert("Failed to create post"+ data.message);
-                }
-            }catch (error) {
-                console.error("Error:", error);
-                alert("Something went wrong")
-        }})
-    </script>
+  <!-- Navbar -->
+  <nav class="bg-white shadow-md px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-2">
+      <img src="../image/web.jpg" class="w-8 h-8" alt="YouMul Logo">
+      <span class="text-2xl font-bold text-orange-600">YouMul</span>
+    </div>
+    <div>
+      <a href="profile.html" class="text-gray-600 hover:text-blue-600 font-semibold">My Profile</a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-grow flex items-center justify-center p-6">
+    <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Create New Post</h2>
+      <form id="post_Form" enctype="multipart/form-data" class="flex flex-col gap-4">
+        <textarea
+          placeholder="What's on your mind?"
+          name="text"
+          required
+          class="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows="4"
+        ></textarea>
+
+        <input type="file" id="imgInput" name="image" accept="image/*" class="hidden" />
+        <label for="imgInput" class="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold shadow-inner rounded-lg py-2 px-4 text-center">
+          Add Media
+        </label>
+
+        <button
+          type="submit"
+          class="bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-all duration-200"
+        >
+          Post
+        </button>
+      </form>
+
+      <p class="mt-4 text-sm text-center">
+        <a href="profile.html" class="text-blue-600 hover:underline">❮❮ Back to Profile</a>
+      </p>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById("post_Form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData();
+      const text = document.querySelector('textarea[name="text"]').value;
+      const image = document.querySelector('input[name="image"]').files[0];
+      const token = localStorage.getItem("token");
+      formData.append("text", text);
+      if (image) formData.append("image", image);
+
+      try {
+        const res = await fetch("http://localhost:5000/api/post/post", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert("🎉 Post Created Successfully!");
+        } else {
+          alert("❌ Failed to create post: " + data.message);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Something went wrong");
+      }
+    });
+  </script>
+
 </body>
 </html>

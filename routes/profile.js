@@ -116,4 +116,21 @@ router.put("/update",verifyToken, async (req,res)=>{
   res.status(500).json({message:"Server Errro!"})
 }
 })
+
+// GET profile by userId
+router.get("/user/:userId", async (req, res) => {
+    try {
+        const profile = await User.findOne({ userId: req.params.userId });
+        if (!profile) {
+            return res.status(404).json({ message: "Profile not found" });
+        }
+        res.json(profile);
+    } catch (error) {
+        console.error("Profile fetch Error!:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+module.exports = router;
+
 module.exports = router;

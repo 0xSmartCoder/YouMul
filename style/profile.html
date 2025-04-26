@@ -66,6 +66,18 @@
                 document.getElementById("uploadForm").style.display = "none"
                 document.getElementById("postbt").style.display = "none"
             }
+            const currentUser = await checkCurrentUser()
+            const isOwnProfile = !userId || userId === currentUser._id
+            if(!isOwnProfile){
+                document.getElementById("editUsernamebtn").style.display = "none"
+                document.getElementById("editBioBtn").style.display = "none"
+                document.getElementById("savebt").style.display = "none"
+                document.getElementById("followbt").style.display = "inline-block"
+            }else{
+                document.getElementById("editUsernamebtn").style.display = "inline-block"
+                document.getElementById("editBioBtn").style.display = "inline-block"
+                document.getElementById("followbt").style.display = "none"
+            }
             const url = userId?
                 `http://localhost:5000/api/profile/user/${userId}`:
                  "http://localhost:5000/api/profile/me"
@@ -90,10 +102,11 @@
                  }
 
             }catch (Error){
-            console.log("Error",error)
+            console.log("Error",Error)
         }} 
-        let currentUserName = ""
-        let currentBio = ""
+    
+
+       
         document.getElementById("editUsernamebtn").addEventListener("click", ()=>{
             const userSpan = document.getElementById("userName")
             const userInput = document.getElementById("updateUserNameInput")
@@ -255,7 +268,7 @@
                 }
             })
         }
-          // fetch myPosts & users Posts
+          // fetch myPosts & users Posts....
 
           async function fetchMyPosts(){
             const token = localStorage.getItem("token")
@@ -269,24 +282,64 @@
                 method: "GET",
                 headers: {Authorization: `Bearer ${token}`}
             })
+
+            const url2 = userId?
+                `http://localhost:5000/api/profile/user/${userId}`:
+                 "http://localhost:5000/api/profile/me"
+
+            const res2 = await fetch(url2,{
+                headers: {Authorization: `Bearer ${token}`}
+            })
+            const data = await res2.json()
             const post = await res.json()
             const list = document.getElementById("postList")
             list.innerHTML = ""
-            post.forEach(posts =>{
+            for(const posts of post){
                 const li = document.createElement("li")
+                li.classList.add("bg-white", "py-6", "rounded-lg", "shadow-md", "mb-6", "transition", "duration-300", "hover:bg-gray-200")
+                const commentHtml = await Promise.all((posts.comments || []).map(async (c)=>{
+                    let profilePic = 'default.png';
+                      try{
+                         const res = await fetch(`http://localhost:5000/api/profile/user/${c.userId?._id}`,{
+                         headers: {Authorization: `Bearer ${token}`}
+                         })
+                         if(res.ok){
+                            const userData = await res.json()
+                            console.log("User Data:", userData);
+                            if(userData.profilePic){
+                                profilePic = `http://localhost:5000/${userData.profilePic}`
+                            }
+                         }
+                        }catch(error){
+                            console.log("Error:", error)
+                        }
+                        return `
+                        <li class="flex items-center space-x-2">
+                            <img src="${profilePic}" class="w-8 h-8 rounded-full border">
+                            <span><b><a href="/profile.html?userid=${c._id}" class="text-blue-500 hover:underline">${c.userId?.userName || "User"}</a>: </b>${c.text}</span>
+                            </li>
+                        `
+                }))
                 li.innerHTML = `
-                <p><strong>${posts.userId?.userName || "Anonyomus"}</strong></p>
-                <p>${posts.text}</p>
-                <img src="http://localhost:5000/uploads/${posts.image}" width="200"/>
+                <div class="items-center flex space-x-3 mb-2">
+                    <img src="${data.profilePic?`http://localhost:5000/${data.profilePic}`: 'default.png'}" alt="profile" class="w-10 h-10 rounded-full border">
+                    <p class="text-sm font-semibold text-gray-800">${posts.userId?.userName || "Anonymous"}</p>
+                    </div>
+                <p class="text-gray-700">${posts.text}</p>
+                ${posts.image? `<img src="http://localhost:5000/uploads/${posts.image}" class="w-full rounded-lg mb-3" />`: ""}
+                <div class="flex items-center space-x-4 text-sm text-gray-600 mb-3">
                 <p>likes: ${posts.likes?.length || 0}</p>
-                <button onclick="likePost('${posts._id}')">👍</button>   
-                 <form>
-        <input name="text" placeholder="What's on your mind" required/>
-        <button type="button" onclick="commentPost(event, '${posts._id}')">🗨️</button>
+                <button onclick="likePost('${posts._id}')" class="text-blue-500 over:text-blue-700">👍</button> 
+                </div>  
+                 <form class="flex items-center space-x-2 mb-2">
+        <input name="text" placeholder="What's on your mind" required
+        class="flex-grow p-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+        <button type="button" onclick="commentPost(event, '${posts._id}')" class="text-green-500 text-sm hover:text-green-700 font-semibold ml-auto">Post</button>
     </form>
-    <ul>${(posts.comments || []).map(c => `<li><b>${c.userId?.userName || "User"}: </b>${c.text}</li>`).join("")}</ul>`
+    <ul class="mt-4 space-y-2 text-sm text-gray-600">${commentHtml.join("")}</ul>`
                 list.appendChild(li)
-            })
+            }
             }catch (Error){
             console.log("Error".error)
         }} 
@@ -310,7 +363,6 @@
             alert ("Something Went Wrong")
         }        
         }
-
         async function commentPost(e,id){
             e.preventDefault()
             const token = localStorage.getItem("token")
