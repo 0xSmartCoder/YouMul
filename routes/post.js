@@ -88,6 +88,20 @@ router.put("/like/:id", verifyToken, async (req, res) => {
   }
 });
 
+// GET single post by ID
+router.get('/post/:id', verifyToken, async (req, res) => {
+  try {
+      const post = await Post.findById(req.params.id);
+      if (!post) {
+          return res.status(404).json({ message: "Post not found" });
+      }
+      res.status(200).json(post); 
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
+  }
+});
+
 // Comment on post
 router.post("/comment/:id", verifyToken, async (req, res) => {
   try {

@@ -7,8 +7,8 @@ const userSchema = mongoose.Schema(
     bio: { type: String, default: "" },
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    profilePic: {type: String, default: ""}
+    profilePic: { type: String, default: "" },
   },
-  { timeStamps: true }
+  { timeStamps: true },
 );
 module.exports = mongoose.model("User", userSchema);
