@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../modal/user");
 const multer = require("multer");
-const verifyToken = require("../utils/verify");
+const {verifyToken} = require("../utils/verify");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {

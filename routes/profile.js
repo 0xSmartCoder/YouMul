@@ -1,7 +1,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const User = require("../modal/user");
-const verifyToken = require("../utils/verify");
+const {verifyToken} = require("../utils/verify");
 const { default: mongoose } = require("mongoose");
 const Notification = require("../modal/notification");
 const router = express.Router();

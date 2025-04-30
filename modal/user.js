@@ -7,8 +7,10 @@ const userSchema = mongoose.Schema(
     bio: { type: String, default: "" },
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    role: { type: String, default: "user", enum: ["user", "admin"] },
     profilePic: { type: String, default: "" },
+    active:{type: Boolean, default: true },
   },
-  { timeStamps: true },
+  { timestamps: true },
 );
 module.exports = mongoose.model("User", userSchema);

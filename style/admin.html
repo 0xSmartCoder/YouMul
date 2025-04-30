@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Window</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <div class="flex">
+      <aside class="w-64 bg-white h-screen shadow-md p-5">
+       <h2 class="text-xl font-semibold mb-5"> Admin Panel</h2>
+       <ul>
+        <li><a href="" class="text-blue-500 hover:underline font-semibold text-lg underline">Dashbord</a></li>
+        <br><br>
+        <li><a href="" class="hover:underline">Manage Users</a></li><br>
+        <li><a href="" class="hover:underline">Manage Posts</a></li><br>
+        <li><a href="" class="hover:underline">Comments</a></li><br>
+        <li><a href="" class="hover:underline">Reports</a></li><br>
+       </ul><br>
+       <li><a href="" class="text-red-600 hover:underline">Logout</a></li>
+      </aside>
+    <main class="flex-1 p-10">
+     <h1 class="text-2xl font-bold mb-4">Admin Window</h1>
+     <section class="mb-8">
+        <table class="min-w-full bg-white shadow rounded-lg">
+         <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Profile UserName</th>
+                <th class="py-2 px-4 border-b">Registration Email</th>
+                <th class="py-2 px-4 border-b">Actions</th>
+            </tr>
+         </thead>
+         <tbody id="userTable"></tbody>
+        </table>
+     </section>
+    </main>
+</div>
+<script>
+async function loadUsers(){
+    const token = localStorage.getItem("token")
+    try{
+    const res = await fetch("http://localhost:5000/api/onlyAdmin/users",{
+        method: "GET",
+        headers:{Authorization: `Bearer ${token}`}
+    })
+    const users = await res.json()
+    const table = document.getElementById("usertable")
+    table.innerHTML = users.map(user =>`
+    <tr>
+    <td class"py-2 px-4 border-b">${user.userName}</td>
+    <td class"py-2 px-4 border-b">${user.Email}</td>
+    <td class"py-2 px-4 border-b">
+    <button class="text-red-500 hover:underline>Ban</button>    
+    </td>
+    </tr>
+    `).join("")
+    }catch(Error){
+        console.log("Error:", Error)
+    }
+}
+loadUsers()
+</script>    
+</body>
+</html>

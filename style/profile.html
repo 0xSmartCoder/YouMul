@@ -17,11 +17,14 @@
         }
       </style>
 </head>
-<body class="min-h-screen bg-gradient-to-r from-gray-100 to-gray-600">
-    <nav class="bg-blue-600 p-4 flex justify-between items-center">
-        <div class="text-white text-2xl font-bold">
-         YouMul
+<body class="min-h-screen bg-white">
+    <nav class="bg-gray-200 p-1 flex justify-between items-center">
+        <div class="items-center flex">
+            <a href="Dash.html">
+         <img src="/image/web.jpg" class="w-9 h-9" />
+         </a>
         </div>
+         <div class="flex items-center space-x-4">
         <div class="relative">
         <button id="notificationButton" class="relative focus:outline-none bg-black">
          <svg class="w-8 h-8 text-white"
@@ -36,9 +39,25 @@
             <div id="notificationList" class=" max-h-64 overflow-y-auto">
             </div>
         </div>
+    <div class="relative inline-block text-left">
+        <div>
+          <button onclick="toggleDropdown()" type="button" class=" w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <img src="/image/user.jpg" class="w-8 h-8 rounded-full" alt="User" />
+          </button>
+        </div>
+      
+        <div id="dropdownMenu" class="hidden absolute right-0 z-10 mt-2 w-44 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+          <div class="py-1">
+            <a href="/profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+            <a href="/settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+            <button onclick="logoutUser()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Logout</button>
+          </div>
+        </div>
+      </div>
          </div>
+         
     </nav>
-    <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md space-y-5 text-center">
+    <div class="bg-white shadow-lg p-6 w-full max-w-md space-y-5 text-center">
     <img id="previewPic" src="" alt="Profile Picture" class="w-32 h-32 rounded-full mx-auto object-cover border-4 border-white shadow-md">
     <form id="uploadForm" enctype="multipart/form-data" class="flex flex-col items-center gap-2">
         <input type="file" id="profileInput" name="profilepic" accept="image/*" required class="hidden">
@@ -46,7 +65,7 @@
             Update Image
           </label>
         <button type="submit" id="uploadbt" class="bg-purple-600 hover:bg-purple-800 text-white font-semibold py-2 px-4 rounded hidden">Add Image</button>
-        <button id="updatebt" type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded hidden">Save Profile</button>
+        <button id="updatebt" type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded hidden">Save Profile</button>
     </form>
     <div class="space-y-1">
     <p class="text-lg font-semibold"><strong>Username: </strong><span id="userName" class="font-normal text-gray-700"></span>
@@ -66,8 +85,8 @@
     <button id="followbt" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 transition duration-300">Follow</button>
 
     <div>
-        <button id="postbt" class="mt-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-6 rounded transition duration-300">
-          <a href="post.html">New Post</a>
+        <button id="postbt" class="mt-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded transition duration-300">
+          <a href="post.html">Create Post</a>
         </button>
       </div>    
 
@@ -77,6 +96,23 @@
     </div>
 </div>
     <script>
+        document.addEventListener("click",function(event){
+            const dropDown = document.getElementById("dropdownMenu")
+            const button = event.target.closest('button[onclick="toggleDropdown()"]')
+            const isInside = event.target.closest("#dropdownMenu")
+            if(!button && !isInside){
+                dropDown.classList.add("hidden")
+            }
+        })
+       
+        async function toggleDropdown(){
+            const dropDown = document.getElementById("dropdownMenu")
+            dropDown.classList.toggle("hidden")
+        }
+        async function logoutUser(){
+            localStorage.removeItem("token")
+            window.location.href = "login.html"
+        }
         const socket = io("http://localhost:5000")
         let displayedNotifications = {}
         async function setupSocket(){
@@ -149,13 +185,21 @@
         }else{
             notificationCount.classList.add("hidden")
         }
+        const userid = new URLSearchParams(window.location.search).get("userId")
+        const url = userid?
+        `http://localhost:5000/api/profile/user/${userid}`
+        :`http://localhost:5000/api/profile/me`
+        const userRes = await fetch(url,{
+            headers: {Authorization: `Bearer ${token}`}
+        })
+        const data =  await userRes.json()
         notifications.forEach(notification =>{
         const item = document.createElement("div")
         item.className = "flex items-center gap-2 p-2 border-b" 
         item.innerHTML = `
         <img src="${notification.fromUserId.profilePic || "default.png"}" class="w-10 h-10 rounded-full mr-3" alt="profile"/>
-        <div><p class="text-gray-800 text-sm font-semibold">${notification.fromUserId.userName}</p>
-            <p class="text-gray-600 text-xs">${notification.type === "Like"? "Liked":"Commented"}Your Post</p>
+        <div><span><b><a href="/profile.html?userId=${notification.fromUserId._id}" class="text-gray-800 text-sm font-semibold hover:underline hover:text-red-500">${notification.fromUserId.userName}</b></a><span>
+            <p class="text-gray-600 text-xs">${notification.type === "Like"? "Liked":"Commented"} Your Post</p>
             </div>
         `
         displayedNotifications[currentUserId].add(notification._id)

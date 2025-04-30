@@ -69,6 +69,7 @@ app.use(cors());
 const upload = require ("./routes/upload")
 const post = require("./routes/post");
 const auth = require("./routes/auth");
+const onlyAdmin = require ("./routes/onlyAdmin") 
 const profile = require("./routes/profile");
 const { Socket } = require("socket.io-client");
 const { error } = require("console");
@@ -87,6 +88,7 @@ mongoose.connect(
     })
 
 app.use(express.static("style"));
+app.use("/api/onlyAdmin", onlyAdmin)
 app.use('/image', express.static(path.join(__dirname, 'image')));
 app.use(express.static('public'));
 app.use("/api/upload", upload)
