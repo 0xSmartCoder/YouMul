@@ -18,7 +18,7 @@
       </style>
 </head>
 <body class="min-h-screen bg-white">
-    <nav class="bg-gray-200 p-1 flex justify-between items-center">
+    <nav class="bg-white p-1 flex justify-between items-center">
         <div class="items-center flex">
             <a href="Dash.html">
          <img src="/image/web.jpg" class="w-9 h-9" />
@@ -42,15 +42,15 @@
     <div class="relative inline-block text-left">
         <div>
           <button onclick="toggleDropdown()" type="button" class=" w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-            <img src="/image/user.jpg" class="w-8 h-8 rounded-full" alt="User" />
+            <img src="/image/user.png" class="w-8 h-8 rounded-full" alt="User" />
           </button>
         </div>
       
         <div id="dropdownMenu" class="hidden absolute right-0 z-10 mt-2 w-44 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
           <div class="py-1">
-            <a href="/profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
-            <a href="/settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
-            <button onclick="logoutUser()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Logout</button>
+            <a href="/profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">👤 Profile</a>
+            <a href="/settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">⚙️ Settings</a>
+            <button onclick="logoutUser()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">↩️ Logout</button>
           </div>
         </div>
       </div>
@@ -64,7 +64,7 @@
         <label for="profileInput" class="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded shadow">
             Update Image
           </label>
-        <button type="submit" id="uploadbt" class="bg-purple-600 hover:bg-purple-800 text-white font-semibold py-2 px-4 rounded hidden">Add Image</button>
+        <button type="submit" id="uploadbt" class="bg-orange-600 hover:bg-orange-500 text-white font-semibold py-2 px-4 rounded hidden">Add Image</button>
         <button id="updatebt" type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded hidden">Save Profile</button>
     </form>
     <div class="space-y-1">
@@ -85,7 +85,7 @@
     <button id="followbt" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 transition duration-300">Follow</button>
 
     <div>
-        <button id="postbt" class="mt-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded transition duration-300">
+        <button id="postbt" class="mt-2 bg-orange-600 hover:bg-orange-500 hover:font-bold text-white font-semibold py-2 px-6 rounded transition duration-300">
           <a href="post.html">Create Post</a>
         </button>
       </div>    
@@ -113,8 +113,8 @@
             localStorage.removeItem("token")
             window.location.href = "login.html"
         }
-        const socket = io("http://localhost:5000")
         let displayedNotifications = {}
+        const socket = io("http://localhost:5000")
         async function setupSocket(){
             const token = localStorage.getItem("token")
             const res = await fetch("http://localhost:5000/api/profile/me",{
@@ -135,7 +135,8 @@
                 Swal.fire({
             position: 'top-end',
             icon: 'info',
-            title: `${fromUser.userName} ${type === "Like"?"liked":"commented on"} your post`,
+            title: type === "Follow"? `${fromUser.userName} followed you`
+            :`${fromUser.userName}${type === "Like"? "liked": "commented on"} your post`,
             imageUrl: fromUser.profilePic || "default.png",
             imageWidth: 30,
             imageHeight: 30,
@@ -261,8 +262,6 @@
             console.log("Error",Error)
         }} 
     
-
-       
         document.getElementById("editUsernamebtn").addEventListener("click", ()=>{
             const userSpan = document.getElementById("userName")
             const userInput = document.getElementById("updateUserNameInput")
@@ -405,6 +404,22 @@
                     headers: {Authorization: `Bearer ${token}`} 
                 })
                 const data = await res.json()
+                const userRes = await fetch("http://localhost:5000/api/profile/me",{
+                    headers: {Authorization: `Bearer ${token}`} 
+                })
+                const fromUser = await userRes.json()
+                console.log("User:", fromUser)
+                // const url2 = userId?
+                // `http://localhost:5000/api/profile/user/${userId}`:
+                //  "http://localhost:5000/api/profile/me"
+                const userPosts = await fetch(`http://localhost:5000/api/profile/user/${userId}`,{
+                method: "GET",
+                headers: {Authorization: `Bearer ${token}`}
+            })
+            
+            const postOwner = await userPosts.json()
+            console.log("PostOwner:",postOwner)
+            console.log("PostOwner ID:", postOwner._id); // Check if _id exists
 
                 if(res.ok){
                     isFollowing = !isFollowing
@@ -412,12 +427,20 @@
                     "Unfollow"
                     :"Follow";
                     alert(data.message)
+                    console.log("Emitting notification:", {
+                    toUserId: postOwner._id,
+                    fromUserId: fromUser._id,
+                    type: "Follow",
+                    message: "You have a new follower"})
                     if(isFollowing){
                         socket.emit('sendNotification',{
-                        toUserId: userId,
+                        toUserId: postOwner._id,
+                        fromUserId: fromUser._id,
+                        type: "Follow",
                         message: "You have a new follower"
                         })
                     }
+                    getNotification()
                 }
             }catch(error){
                 console.log("Error:", error)
@@ -533,6 +556,7 @@
                         postId: postData._id,
                         message: "Someone's Liked Your Post"
                     })
+                    getNotification()
             }else{
                 alert ("Like Failed"+ data.message)
             }
@@ -578,6 +602,7 @@
                 type: "Comment",
                 message:`${User.userName} Commented on Your Post`
                 })
+                getNotification()
              }else{
                 alert ("Comment Failed"+ data.message)
              }

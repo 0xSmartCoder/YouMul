@@ -71,6 +71,7 @@
         const data = await res.json();
         if (res.ok) {
           alert("🎉 Post Created Successfully!");
+          window.location.href = "profile.html"
         } else {
           alert("❌ Failed to create post: " + data.message);
         }

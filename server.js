@@ -22,6 +22,7 @@ io.on('connection', (socket)=>{
     socket.join(userId)
   })
 socket.on('sendNotification',async(data)=>{
+  console.log("Data:", data)
   try{
     const {toUserId, fromUserId, type, postId} = data
     const alreadyExists = await Notification.findOne({
