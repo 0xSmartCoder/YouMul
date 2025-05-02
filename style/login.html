@@ -1,46 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <title>Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="justify-center items-center bg-black flex min-h-screen ">
-    <form id="login_Form" class=" bg-white p-8  shadow-l space-y-4 rounded-lg">
-        <h1 class="text-blue-600 text-2xl text-center font-bold">Login</h1>
-        <input type="text", id="email", placeholder="Enter your email", required
-        class="w-full px-4 py-2  border border-gray-300 focus: outline-node focus:ring-2 focus: ring-blue-500"
-        >
-        <input type="text", id="password", placeholder="Enter your password", required
-        class="w-full py-2 px-4 focus: outline-node focus:ring-2 focus: ring-blue-500"
-        >
-        <button type="submit" class=" w-full py-2 bg-blue-600  text-white rounded hover:bg-blue-700 transition-colors"> Login</button>
-        <p class="text-center text-gray-600">Don't ahve an account? <button><a href="register.html">Register</a></button></p>
+<body class="bg-gradient-to-br from-gray-900 to-black min-h-screen flex items-center justify-center px-4">
+  <div class="max-w-md w-full bg-white p-8 rounded-xl shadow-xl space-y-6">
+    <h1 class="text-3xl font-bold text-center text-blue-600">Welcome Back</h1>
+
+    <!-- Login Form -->
+    <form id="login_Form" class="space-y-4">
+      <input
+        type="email"
+        id="email"
+        placeholder="Email"
+        required
+        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <input
+        type="password"
+        id="password"
+        placeholder="Password"
+        required
+        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <button
+        type="submit"
+        class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
+      >
+        Login
+      </button>
     </form>
-    <script>
-        document.getElementById("login_Form").addEventListener("submit", async(e)=>{
-            e.preventDefault()
-           const email = document.getElementById("email").value
-           const password =  document.getElementById("password").value
-           try{
-           const res = await fetch("http://localhost:5000/api/auth/login", {
-            method: "POST",
-            headers: ({"Content-Type": "application/json"}),
-            body: JSON.stringify({email, password})
-           })
-           const data  = await res.json()
-           if(res.ok && data.token){
-            localStorage.setItem("token", data.token)
-            alert("Login Successfull")
-            window.location.href = "profile.html"
-           }else{
-            alert("Login Failed")
-           }
-           }catch(Error){
-            console.log("Error", Error)
-            alert ("Something Went Wrong")
-           }
-        })
-    </script>
+
+    <div class="text-sm text-center text-gray-600">
+      <p>
+        Forgot your password?
+        <button
+          class="text-blue-500 hover:underline"
+          onclick="toggleForgotForm(true)"
+        >
+          Reset here
+        </button>
+      </p>
+      <p class="mt-2">
+        Don't have an account?
+        <a href="register.html" class="text-blue-500 hover:underline">Register</a>
+      </p>
+    </div>
+
+    <!-- Forgot Password Form (Hidden by Default) -->
+    <form id="forgotForm" class="space-y-4 hidden">
+      <input
+        type="email"
+        id="emailR"
+        placeholder="Enter your email to reset"
+        required
+        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <button
+        type="submit"
+        class="w-full bg-yellow-500 text-white py-2 rounded-md hover:bg-yellow-600 transition-colors"
+      >
+        Send Reset Link
+      </button>
+      <button
+        type="button"
+        onclick="toggleForgotForm(false)"
+        class="text-center text-sm text-gray-500 hover:underline w-full"
+      >
+        Cancel
+      </button>
+    </form>
+
+    <!-- Reset Password Form (Shown only via link with token) -->
+    <form id="resetForm" class="space-y-4 hidden">
+      <input
+        type="password"
+        id="newPassword"
+        placeholder="New Password"
+        required
+        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <button
+        type="submit"
+        class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition-colors"
+      >
+        Reset Password
+      </button>
+    </form>
+  </div>
+
+  <script>
+    const forgotForm = document.getElementById("forgotForm");
+    const resetForm = document.getElementById("resetForm");
+
+    // If token is in URL, show reset password form
+    const token = new URLSearchParams(window.location.search).get("token");
+    if (token) {
+      resetForm.classList.remove("hidden");
+    }
+
+    function toggleForgotForm(show) {
+      if (show) {
+        forgotForm.classList.remove("hidden");
+      } else {
+        forgotForm.classList.add("hidden");
+      }
+    }
+
+    document.getElementById("login_Form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+        if (res.ok && data.token) {
+          localStorage.setItem("token", data.token);
+          alert("Login Successful");
+          window.location.href = "profile.html";
+        } else {
+          alert(data.message || "Login Failed");
+        }
+      } catch (err) {
+        console.log("Error:", err);
+        alert("Something went wrong");
+      }
+    });
+
+    document.getElementById("forgotForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("emailR").value;
+
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/forgot-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
+        alert(data.message);
+      } catch (err) {
+        console.log("Error:", err);
+        alert("Failed to send reset link");
+      }
+    });
+
+    document.getElementById("resetForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const newPassword = document.getElementById("newPassword").value;
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/reset-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, newPassword }),
+        });
+        console.log(token)
+        const data = await res.json();
+        alert(data.message);
+        if (res.ok) window.location.href = "index.html";
+      } catch (err) {
+        console.log("Error:", err);
+        alert("Failed to reset password");
+      }
+    });
+  </script>
 </body>
 </html>

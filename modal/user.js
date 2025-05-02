@@ -10,6 +10,8 @@ const userSchema = mongoose.Schema(
     role: { type: String, default: "user", enum: ["user", "admin"] },
     profilePic: { type: String, default: "" },
     active:{type: Boolean, default: true },
+    tokenExpiry:{type: Date},
+    resetToken:{type: String}
   },
   { timestamps: true },
 );

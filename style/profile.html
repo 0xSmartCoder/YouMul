@@ -135,8 +135,12 @@
                 Swal.fire({
             position: 'top-end',
             icon: 'info',
-            title: type === "Follow"? `${fromUser.userName} followed you`
-            :`${fromUser.userName}${type === "Like"? "liked": "commented on"} your post`,
+            title: type === "Follow"
+            ?`${fromUser.userName} followed you`
+            :(type === "Like"
+            ?`${fromUser.userName} Liked Your Post`
+            :`${fromUser.userName} Commented Your Post`),
+
             imageUrl: fromUser.profilePic || "default.png",
             imageWidth: 30,
             imageHeight: 30,
@@ -243,6 +247,21 @@
             headers :{Authorization: `Bearer ${token}`}
         })
         const data = await res.json()
+        const authRes = await fetch("http://localhost:5000/api/profile/me", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const currentUserAuth = await authRes.json();
+        if(currentUser.role === "admin"){
+            const dropdown = document.getElementById("dropdownMenu");
+            const alreadyExist = dropdown.querySelector('a[href="/admin.html"]')
+            if(! alreadyExist){
+            const adminLink = document.createElement("a")
+            adminLink.href = "/admin.html"
+            adminLink.className = "block px-4 py-2 text-sm text-blue-700 font-semibold hover:bg-gray-100";
+            adminLink.innerText = "🛠️ Admin Panel";
+            dropdown.insertBefore(adminLink, dropdown.children[2])
+            }
+        }
         document.getElementById("userName").innerText = data.userName || "N/A"
         document.getElementById("email").innerText = data.email
         document.getElementById("bio").innerText = data.bio || "N/A"
